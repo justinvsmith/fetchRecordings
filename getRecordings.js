@@ -1,7 +1,11 @@
 require('dotenv').config();
 
 let fs = require('fs');
-let writeStream = fs.createWriteStream(`${__dirname}/recordings.csv`);
+// let writeStream = fs.createWriteStream(`${__dirname}/recordings.csv`);
+let fileCount = Math.floor(10 + Math.random() * 90);
+
+let startDate = process.env.START_DATE;
+let endDate = process.env.END_DATE;
 
 
 const accountSid = process.env.ACCOUNT_SID;
@@ -11,8 +15,8 @@ const client = require('twilio')(accountSid, authToken);
 async function recordingInfo() {
     let info = [["Date Created", "Call Sid", "Media Url"]];
     await client.recordings
-                                .list({dateCreatedAfter: '2022-01-01', 
-                                        dateCreatedBefore: '2022-02-01'})
+                                .list({dateCreatedAfter: startDate, 
+                                        dateCreatedBefore: endDate})
                                 .then(recordings => recordings.forEach(r => {
                                     info.push([r.dateCreated, r.callSid, r.mediaUrl])
                                 }))
@@ -20,9 +24,24 @@ async function recordingInfo() {
 }
 
 async function writetofile(newLine){
-    writeStream.write(newLine, () => {
+
+
+
+    if(fs.existsSync(`${__dirname}/${startDate}_recordings_${fileCount}.csv`)) {
+        fileCount++;
+        fs.createWriteStream(`${__dirname}/${startDate}_recordings_${fileCount}.csv`).write(newLine, () => {
+            // a line was written to stream
+        })
+
+
+    } else {fs.createWriteStream(`${__dirname}/${startDate}_recordings_${fileCount}.csv`).write(newLine, () => {
         // a line was written to stream
     })
+
+
+
+    
+}
 }
 
 async function makeCsv() {
